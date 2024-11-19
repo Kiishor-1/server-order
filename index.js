@@ -6,6 +6,7 @@ const app = express();
 const cors = require('cors');
 const connectDB = require('./config/dbConfig');
 const { port } = require('./config/appConfig');
+const authRoutes = require('./routes/authRoutes');
 
 const FRONT_ENDS = process.env.FRONT_ENDS.split(',');
 
@@ -34,6 +35,8 @@ app.use(express.urlencoded({ extended: true }));
 app.get("/", (req, res) => {
     res.send("Standard root");
 });
+
+app.use("/api/v1/auth", authRoutes);
 
 app.all("*", (req, res, next) => {
     const error = new Error("No such routes available");
