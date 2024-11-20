@@ -11,7 +11,7 @@ const passwordStrengthValidator = (value, helpers) => {
 
 
 function checkPasswordStrength(value) {
-    if (value.length < 6) {
+    if (value.length < 8) {
         return "Password must be at least 6 characters long.";
     }
     if (!/[A-Z]/.test(value)) {

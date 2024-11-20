@@ -14,20 +14,15 @@ module.exports.userSchema = Joi.object({
         .required().messages({
             'any.required': 'Password is required',
         }),
-    confirmPassword: Joi.string().valid(Joi.ref('password')).required().messages({
-        'any.required': 'Confirm Password is required',
-        'any.only': 'Passwords must match',
-    }),
-    address: Joi.object({
-        location: Joi.string().required().messages({
-            'any.required': 'Address location is required',
+    phoneNumber: Joi.string()
+        .length(10)
+        .pattern(/^\d+$/)
+        .required()
+        .messages({
+            'any.required': 'Phone number is required',
+            'string.length': 'Phone number must be exactly 10 digits long',
+            'string.pattern.base': 'Phone number must contain only digits',
         }),
-        country: Joi.string().required().messages({
-            'any.required': 'Country is required',
-        }),
-    }).required().messages({
-        'any.required': 'Address is required',
-    }),
 });
 
 
