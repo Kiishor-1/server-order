@@ -9,6 +9,7 @@ const { addToCart,
     createSharableCart,
     getSharableCart,
     clearCart,
+    syncCart,
 } = require('../controllers/cart');
 
 
@@ -47,5 +48,7 @@ router.delete('/cart/:foodItemId', authMiddleware, removeFromCart);
 router.post('/cart/shared', authMiddleware, createSharableCart);
 
 router.get('/cart/shared/:cartId', getSharableCart);
+
+router.post('/cart/sync',authMiddleware, syncCart);
 
 module.exports = router;

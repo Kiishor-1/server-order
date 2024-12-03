@@ -304,6 +304,46 @@ const getSharableCart = async (req, res) => {
     }
 };
 
+const syncCart = async (req, res) => {
+    try {
+        const userId = req.user?._id;
+        const { items } = req.body;
+
+        if (!items || !Array.isArray(items)) {
+            return res.status(400).json({ success: false, message: "Invalid cart items." });
+        }
+
+        const user = await User.findById(userId);
+
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found." });
+        }
+
+        items.forEach((newItem) => {
+            const existingItem = user.cart.find(
+                (item) => item.foodItem.toString() === newItem.foodItem
+            );
+
+            if (existingItem) {
+                existingItem.quantity += newItem.quantity;
+            } else {
+                user.cart.push(newItem);
+            }
+        });
+
+        await user.save();
+
+        return res.status(200).json({
+            success: true,
+            data: user.cart,
+        });
+    } catch (error) {
+        console.error("Error syncing cart:", error);
+        return res.status(500).json({ success: false, message: "Internal Server Error" });
+    }
+};
+
+
 module.exports = {
     getCart,
     addToCart,
@@ -311,5 +351,6 @@ module.exports = {
     removeFromCart,
     clearCart,
     createSharableCart,
-    getSharableCart
+    getSharableCart,
+    syncCart,
 };
