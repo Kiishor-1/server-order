@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const FoodItem = require('../models/FoodItem'); // Assuming a FoodItem model exists
 const SharableCart = require("../models/SharableCart");
+const mongoose = require("mongoose");
 
 const getCart = async (req, res) => {
     try {
@@ -304,6 +305,8 @@ const getSharableCart = async (req, res) => {
     }
 };
 
+
+
 const syncCart = async (req, res) => {
     try {
         const userId = req.user?._id;
@@ -319,17 +322,31 @@ const syncCart = async (req, res) => {
             return res.status(404).json({ success: false, message: "User not found." });
         }
 
-        items.forEach((newItem) => {
-            const existingItem = user.cart.find(
-                (item) => item.foodItem.toString() === newItem.foodItem
-            );
+        // Use a Map to ensure uniqueness by foodItem ID
+        const cartMap = new Map();
 
-            if (existingItem) {
+        // Add existing items from the user's cart to the map
+        user.cart.forEach((item) => {
+            cartMap.set(item.foodItem.toString(), item);
+        });
+
+        // Update the map with new items
+        items.forEach((newItem) => {
+            if (cartMap.has(newItem.foodItem)) {
+                // If item exists, update quantity
+                const existingItem = cartMap.get(newItem.foodItem);
                 existingItem.quantity += newItem.quantity;
             } else {
-                user.cart.push(newItem);
+                // If item does not exist, add it
+                cartMap.set(newItem.foodItem, newItem);
             }
         });
+
+        // Convert the map back to an array
+        const updatedCart = Array.from(cartMap.values());
+
+        // Save the updated cart to the user document
+        user.cart = updatedCart;
 
         await user.save();
 
@@ -342,6 +359,7 @@ const syncCart = async (req, res) => {
         return res.status(500).json({ success: false, message: "Internal Server Error" });
     }
 };
+
 
 
 module.exports = {

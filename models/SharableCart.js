@@ -35,10 +35,14 @@ const SharableCartSchema = new mongoose.Schema({
     },
 });
 
+
 SharableCartSchema.pre("save", function (next) {
     this.updatedAt = Date.now();
     next();
 });
+
+
+SharableCartSchema.index({ createdAt: 1 }, { expireAfterSeconds: 86400 }); 
 
 const SharableCart = mongoose.model("SharableCart", SharableCartSchema);
 
