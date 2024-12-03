@@ -7,6 +7,8 @@ const cors = require('cors');
 const connectDB = require('./config/dbConfig');
 const { port } = require('./config/appConfig');
 const authRoutes = require('./routes/authRoutes');
+const restaurantRoutes = require('./routes/restaurantRoutes');
+const userRoutes = require('./routes/userRoutes');
 
 const FRONT_ENDS = process.env.FRONT_ENDS.split(',');
 
@@ -37,6 +39,8 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/restaurants", restaurantRoutes);
+app.use("/api/v1/users", userRoutes);
 
 app.all("*", (req, res, next) => {
     const error = new Error("No such routes available");

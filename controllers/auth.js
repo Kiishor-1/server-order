@@ -85,10 +85,11 @@ exports.login = async (req, res) => {
                 expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
                 httpOnly: true,
             }
+            console.log(user)
             res.cookie("token", token, options).status(200).json({
                 success: true,
                 token,
-                user: { _id: user._id, name: user.name, email: user.email },
+                user: { _id: user._id, name: user.name, email: user.email ,addresses:user.addresses},
                 message: `User Login Success`,
             })
         } else {
