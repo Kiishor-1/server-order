@@ -21,6 +21,16 @@ const {
     SetDefaultAddress
 } = require('../controllers/addresses')
 
+
+const {
+    getUser,
+    editUser
+} = require('../controllers/user')
+
+router.get('/', authMiddleware, getUser);
+
+router.put('/', authMiddleware, editUser);
+
 router.get('/addresses', authMiddleware, UserAddresses);
 
 router.post('/addresses', authMiddleware, AddAddress);
@@ -49,6 +59,6 @@ router.post('/cart/shared', authMiddleware, createSharableCart);
 
 router.get('/cart/shared/:cartId', getSharableCart);
 
-router.post('/cart/sync',authMiddleware, syncCart);
+router.post('/cart/sync', authMiddleware, syncCart);
 
 module.exports = router;

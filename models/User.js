@@ -55,6 +55,10 @@ const userSchema = new Schema({
         required: true,
         unique: true,
     },
+    gender:{
+        type:String,
+        enum:['Male','Female'],
+    },
     password: {
         type: String,
         required: true,
@@ -65,6 +69,9 @@ const userSchema = new Schema({
     addresses: {
         type: [addressSchema],
         default: [],
+    },
+    country:{
+        type:String,
     },
     cart: {
         type: [cartItemSchema],

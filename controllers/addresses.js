@@ -2,7 +2,6 @@ const User = require("../models/User");
 
 const UserAddresses = async (req, res) => {
     try {
-        console.log('request')
         const user = await User.findById(req.user._id);
         if (!user) return res.status(404).json({ message: 'User not found' });
 
@@ -68,7 +67,7 @@ const UpdateAddress = async (req, res) => {
 
         if (addressIndex === -1) return res.status(404).json({ message: 'Address not found' });
 
-        Object.assign(user.addresses[addressIndex], req.body); // Update fields
+        Object.assign(user.addresses[addressIndex], req.body);
         await user.save();
 
         res.status(200).json({ 
@@ -102,7 +101,6 @@ const RemoveAddress = async (req, res) => {
         const removedAddress = user.addresses[addressIndex];
         user.addresses.splice(addressIndex, 1);
 
-        // Reset default address if the removed address was default
         if (removedAddress.isDefault && user.addresses.length > 0) {
             user.addresses[0].isDefault = true;
         }

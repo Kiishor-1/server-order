@@ -1,5 +1,5 @@
 const User = require('../models/User');
-const FoodItem = require('../models/FoodItem'); // Assuming a FoodItem model exists
+const FoodItem = require('../models/FoodItem'); 
 const SharableCart = require("../models/SharableCart");
 const mongoose = require("mongoose");
 
@@ -17,7 +17,6 @@ const getCart = async (req, res) => {
             return total + (item.foodItem.price * item.quantity);
         }, 0);
 
-        // Return cart and total price
         res.status(200).json({
             cart: user.cart,
             totalPrice,
@@ -34,16 +33,14 @@ const getCart = async (req, res) => {
 
 
 const addToCart = async (req, res) => {
-    console.log('Request received');
-    const { _id: foodItemId, quantity } = req.body;
-    console.log(req.body);
+    const { _id: foodItemId } = req.body;
 
     try {
         const user = await User.findById(req.user._id);
         if (!user) {
             return res.status(404).json({
                 success: false,
-                error: 'User not found'
+                error: 'User not found',
             });
         }
 
@@ -51,20 +48,21 @@ const addToCart = async (req, res) => {
         if (!foodItem) {
             return res.status(404).json({
                 success: false,
-                error: 'Food item not found'
+                error: 'Food item not found',
             });
         }
+
         let updatedItem;
         const existingItem = user.cart.find(item => item.foodItem.toString() === foodItemId);
 
         if (existingItem) {
-            existingItem.quantity += quantity || 1;
+            existingItem.quantity += 1;
             updatedItem = {
                 foodItem,
                 quantity: existingItem.quantity,
             };
         } else {
-            const newItem = { foodItem: foodItemId, quantity: quantity || 1 };
+            const newItem = { foodItem: foodItemId, quantity: 1 };
             user.cart.push(newItem);
             updatedItem = {
                 foodItem,
@@ -80,13 +78,15 @@ const addToCart = async (req, res) => {
             success: true,
         });
     } catch (error) {
-        console.error(error);
+        console.error("Error in addToCart:", error);
         res.status(500).json({
             success: false,
-            error: error.message || 'Internal Server Error'
+            error: error.message || 'Internal Server Error',
         });
     }
 };
+
+
 
 const updateCartItem = async (req, res) => {
     const { foodItemId } = req.params;
@@ -121,7 +121,7 @@ const updateCartItem = async (req, res) => {
         await user.save();
         res.status(200).json({
             message: 'Cart item updated',
-            cart: user.cart,
+            data: cartItem,
             success: true,
         });
     } catch (error) {
@@ -207,10 +207,7 @@ const clearCart = async (req, res) => {
 const createSharableCart = async (req, res) => {
     const { items } = req.body;
 
-    console.log(req.body);
-
     try {
-        // Validate the request body
         if (!Array.isArray(items) || items.length === 0) {
             return res.status(400).json({
                 success: false,
@@ -218,23 +215,21 @@ const createSharableCart = async (req, res) => {
             });
         }
 
-        // Find an existing shared cart with the same items and ownerId
         const existingCart = await SharableCart.findOne({
             ownerId: req.user?._id,
             shared: true,
             items: {
-                $size: items.length, // Check the size matches
+                $size: items.length, 
                 $all: items.map((item) => ({
                     $elemMatch: {
-                        foodItem: item.foodItem, // Match foodItem ID
-                        quantity: item.quantity, // Match quantity
+                        foodItem: item.foodItem, 
+                        quantity: item.quantity, 
                     },
                 })),
             },
         });
 
         if (existingCart) {
-            console.log("Existing shared cart found:", existingCart);
             return res.status(200).json({
                 success: true,
                 message: "A shared cart with the same items already exists.",
@@ -242,7 +237,6 @@ const createSharableCart = async (req, res) => {
             });
         }
 
-        // Create a new shared cart if no match is found
         const newCart = new SharableCart({
             ownerId: req.user?._id,
             items: items,
@@ -251,7 +245,6 @@ const createSharableCart = async (req, res) => {
 
         const savedCart = await newCart.save();
 
-        console.log("Sharable Cart Created:", savedCart);
         return res.status(201).json({
             success: true,
             message: "Sharable cart created successfully.",
@@ -268,8 +261,6 @@ const createSharableCart = async (req, res) => {
 
 const getSharableCart = async (req, res) => {
     const { cartId } = req.params;
-
-    console.log(cartId)
 
     try {
         if (!cartId) {
@@ -313,52 +304,45 @@ const syncCart = async (req, res) => {
         const { items } = req.body;
 
         if (!items || !Array.isArray(items)) {
-            return res.status(400).json({ success: false, message: "Invalid cart items." });
+            return res.status(400).json({ success: false, error: "Invalid cart items." });
         }
 
         const user = await User.findById(userId);
 
         if (!user) {
-            return res.status(404).json({ success: false, message: "User not found." });
+            return res.status(404).json({ success: false, error: "User not found." });
         }
 
-        // Use a Map to ensure uniqueness by foodItem ID
-        const cartMap = new Map();
-
-        // Add existing items from the user's cart to the map
+        const uniqueIncomingItems = new Map();
+        items.forEach((item) => {
+            uniqueIncomingItems.set(item.foodItem.toString(), item);
+        });
+        const uniqueCartItems = new Map();
         user.cart.forEach((item) => {
-            cartMap.set(item.foodItem.toString(), item);
+            uniqueCartItems.set(item.foodItem.toString(), item);
         });
 
-        // Update the map with new items
-        items.forEach((newItem) => {
-            if (cartMap.has(newItem.foodItem)) {
-                // If item exists, update quantity
-                const existingItem = cartMap.get(newItem.foodItem);
-                existingItem.quantity += newItem.quantity;
-            } else {
-                // If item does not exist, add it
-                cartMap.set(newItem.foodItem, newItem);
-            }
+        uniqueIncomingItems.forEach((item, foodItemId) => {
+            uniqueCartItems.set(foodItemId, item);
         });
 
-        // Convert the map back to an array
-        const updatedCart = Array.from(cartMap.values());
-
-        // Save the updated cart to the user document
-        user.cart = updatedCart;
-
+        user.cart = Array.from(uniqueCartItems.values());
         await user.save();
 
         return res.status(200).json({
+            message: 'Cart synced',
             success: true,
             data: user.cart,
         });
     } catch (error) {
         console.error("Error syncing cart:", error);
-        return res.status(500).json({ success: false, message: "Internal Server Error" });
+        return res.status(500).json({
+            success: false,
+            error: "Internal Server Error"
+        });
     }
 };
+
 
 
 
